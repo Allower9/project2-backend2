@@ -1,0 +1,41 @@
+stages: 
+    - docker_build
+    - deploy
+
+variables:
+  DOCKER_IMAGE: allower99/project2-testbackend2:latest
+  SSH_USER: user1
+  SSH_HOST: 158.160.193.81
+  SSH_PATH: /home/user1/backend2
+
+
+
+docker_build:
+  stage: docker_build
+  tags:
+    - myserver-runner
+  script:
+
+    - docker build -t $DOCKER_IMAGE .
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker push $DOCKER_IMAGE
+
+
+deploy:
+  stage: deploy
+  tags:
+    - myserver-runner
+  before_script:
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY_BASE64" | base64 -d > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
+        echo '🚀 Начинаем деплой...';
+        cd $SSH_PATH &&
+        docker-compose down &&
+        docker-compose pull &&
+        docker-compose up -d --force-recreate
+      "
+  when: manual
