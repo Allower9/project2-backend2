@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  backend:
+    image: allower99/project2-testbackend2:latest
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    environment:
+      - SERVER_NAME=Production
+
